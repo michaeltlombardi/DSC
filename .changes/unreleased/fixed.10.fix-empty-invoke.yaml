@@ -1,0 +1,20 @@
+# Fully resolved chronist entry in .changes/unreleased/fixed.10.fix-empty-invoke.yaml
+id:       fix-empty-invoke
+priority: 10
+breaking: false
+category: fixed
+synopsis: >-
+  Fixed a bug in invocations to send empty objects instead of null when no properties are
+  specified.
+details:  |-
+  Fixed a bug in resource invocations where DSC would send a null string to resources when no
+  properties are specified. This caused some resources to fail, because they expect a JSON
+  object as input. Instead, DSC now sends an empty object, which may be valid for resources
+  that define their [instance schema][aaa] without any required properties.
+
+  [aaa]: reference/schemas/resource/manifest/schema/embedded
+pull_requests:   [111]
+issues:          [78]
+link_references:
+  aaa: { relative: reference/schemas/resource/manifest/schema/embedded }
+related_changes: {}

@@ -1,0 +1,14 @@
+breaking:   true
+diff_url:   https://github.com/PowerShell/DSC/compare/v3.0.0-preview.8...main
+synopsis:   ''
+details:    ''
+security:   []
+removed:    []
+deprecated: []
+changed:    []
+added:
+  - category: pickle
+    synopsis: >-
+      Fixed a bug in invocations to send empty objects instead of null when no properties are specified.
+
+fixed:      []

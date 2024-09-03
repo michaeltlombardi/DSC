@@ -1,0 +1,4 @@
+id:       fix-empty-invoke
+category: fixed
+synopsis: >-
+  Fixed a bug in invocations to send empty objects instead of null when no properties are specified.

@@ -1,0 +1,9 @@
+project_name: DSC
+overview: |-
+  All notable changes to DSCv3 are documented in this file. The format is based on
+  [Keep a Changelog][m1], and DSCv3 adheres to [Semantic Versioning][m2].
+
+  <!-- Meta links -->
+  [m1]: https://keepachangelog.com/en/1.1.0/
+  [m2]: https://semver.org/spec/v2.0.0.html
+
