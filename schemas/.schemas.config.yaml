@@ -1,0 +1,114 @@
+base_uri:         https://raw.githubusercontent.com/PowerShell/DSC/main/schemas
+version:          2024/04
+munge_extensions: true # default true
+# directories:
+#   root:   # Default to folder containing config
+#   source: # Default to <ROOT>/src
+#   output: # Default to <ROOT>/<VERSION>
+#   bundles: # Default to <directories.output>/bundled
+templating:
+  variables:
+    host:             https://raw.githubusercontent.com # Default to <BASE_URI.Host>
+    prefix:           PowerShell/DSC/main/schemas       # Default to <BASE_URI.AbsolutePath>
+    version:          2024/04                           # Default to <VERSION>
+    docs_base_url:    https://learn.microsoft.com/powershell/dsc # No default
+    docs_version_pin: view=dsc-3.0&preserve-view=true            # No default
+
+exporting:
+  vocabularies: [compatible, vscode] # Default is [compatible, vscode, extended]
+  formats:      [json]               # Default is [json], can be [json, yaml]
+  compatible:
+    # id_suffix: ''          # default
+    # remove_examples: true  # default
+    # remove_comments: true  # default
+    # remove_vscode:   true  # Not configurable
+  vscode:
+    # id_suffix: '.vscode'   # default
+    # remove_examples: false # default
+    # remove_comments: true  # default
+    # remove_vscode:   false # Not configurable
+  extended:
+    # id_suffix: '.extended' # default
+    # remove_examples: false # default
+    # remove_comments: false # default
+    # remove_vscode:   false # default
+    # remove_keywords: []    # default
+  # Any other definitions must be defined as the same object type
+
+# Configures how to handle any bundles by default  - each bundle may override
+bundling:
+  # Formats to export as bundles
+  vocabularies: [compatible, vscode] # Default is exporting.vocabularies
+  formats:      [json]               # default is exporting.formats
+  output_folder: bundled        # default
+  # Settings when exporting compatible (standard keywords only) schema bundles
+  compatible: # ConfigurationExporting
+  # Settings when exporting VSCode (with VSCode-recognized extended keywords) schemas
+  vscode: # ConfigurationExporting
+  # Settings when exporting extended (includes custom keywords) schema bundles
+  extended: # ConfigurationExporting
+  # Schemas to bundle
+  schemas:
+    - source_file_path:   resource/manifest.json
+      output_base_name:   manifest               # default [SourceFile].BaseID
+      output_folder_path: bundled/resource       # default directories.output
+      formats:           ['compatible', 'vscode']
+
+bundle_schemas:
+  # Resource manifest bundle
+  - source_file_path:   resource/manifest.json
+    output_base_name:   manifest
+    output_folder_path: bundled/resource
+    formats:           ['Json', 'JsonVSCode']
+
+  # Configuration document bundle
+  - source_file_path:   config/document.json
+    output_base_name:   document
+    output_folder_path: bundled/config
+    formats:           ['Json', 'JsonVSCode']
+
+  # Output schema bundles
+  - source_file_path:   outputs/schema.json
+    output_base_name:   schema              # default: SchemaSourceFile.BaseID
+    output_folder_path: bundled/outputs     # default: 
+    formats:           ['Json', 'JsonVSCode']
+
+  - source_file_path:   outputs/config/get.json
+    output_base_name:   get
+    output_folder_path: bundled/outputs/config
+    formats:           ['Json', 'JsonVSCode']
+
+  - source_file_path:   outputs/config/set.json
+    output_base_name:   set
+    output_folder_path: bundled/outputs/config
+    formats:           ['Json', 'JsonVSCode']
+
+  - source_file_path:   outputs/config/test.json
+    output_base_name:   test
+    output_folder_path: bundled/outputs/config
+    formats:           ['Json', 'JsonVSCode']
+
+  - source_file_path:   outputs/resource/get.json
+    output_base_name:   get
+    output_folder_path: bundled/outputs/resource
+    formats:           ['Json', 'JsonVSCode']
+
+  - source_file_path:   outputs/resource/list.json
+    output_base_name:   list
+    output_folder_path: bundled/outputs/resource
+    formats:           ['Json', 'JsonVSCode']
+
+  - source_file_path:   outputs/resource/schema.json
+    output_base_name:   schema
+    output_folder_path: bundled/outputs/resource
+    formats:           ['Json', 'JsonVSCode']
+
+  - source_file_path:   outputs/resource/set.json
+    output_base_name:   set
+    output_folder_path: bundled/outputs/resource
+    formats:           ['Json', 'JsonVSCode']
+
+  - source_file_path:   outputs/resource/test.json
+    output_base_name:   test
+    output_folder_path: bundled/outputs/resource
+    formats:           ['Json', 'JsonVSCode']

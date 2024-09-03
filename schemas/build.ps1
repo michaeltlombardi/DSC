@@ -474,7 +474,14 @@ begin {
         )
 
         process {
-            ($InputObject | ConvertTo-Json -Depth 99) -replace '\b(\w+\.)yaml', '$1json'
+            # if (-not [string]::IsNullOrEmpty($InputObject['$id'])) {
+            #     Write-Warning "Merging and munging $($InputObject['$id'])"
+            # }
+            $munged = ($InputObject | ConvertTo-Json -Depth 99) -replace '\b(\w+\.)yaml', '$1json'
+            # if (-not [string]::IsNullOrEmpty($InputObject['$id'])) {
+            #     Write-Warning "Merged and munged $($InputObject['$id']): $munged"
+            # }
+            $munged
         }
     }
 
@@ -510,6 +517,55 @@ begin {
             $ID = $InputObject.'$id' -replace $ReplaceIDPattern, $ReplaceIDValue
             $InputObject.'$id' = $ID
             $InputObject
+        }
+    }
+
+    function Set-SchemaExtension {
+        [cmdletbinding()]
+        [OutputType([string])]
+        param(
+            [Parameter()]
+            [string]
+            $SchemaContent,
+
+            [switch]
+            $NoReplaceID,
+
+            [switch]
+            $NoReplaceRef,
+
+            [string[]]
+            $ValidUriPrefix = @(
+                '\/',
+                '\./'
+            )
+        )
+
+        begin {
+            $patterns = @{
+                ID = @{
+                    Find = @(
+                        '(?m)'
+                        '(\$id\s*\:\s*\S+\.)'
+                        '(yaml)'
+                    ) -join ''
+                    Replace = '$1json'
+                }
+                Ref = @{
+                    Find = @(
+                        '(?m)'
+                        '(\$ref\s*\:\s*\S+\.)'
+                        '(yaml)'
+                    ) -join ''
+                    Replace = '$1json'
+                }
+            }
+        }
+
+        process {
+            $munged = $SchemaContent -replace $patterns.ID.Find, $patterns.ID.Replace
+            $munged = $SchemaContent -replace $patterns.Ref.Find, $patterns.Ref.Replace
+            $munged
         }
     }
 
@@ -646,18 +702,32 @@ process {
         $SchemaContent = $SchemaContent -replace '<VERSION>',          $Config.version
         $SchemaContent = $SchemaContent -replace '<DOCS_BASE_URL>',    $Config.docs_base_url
         $SchemaContent = $SchemaContent -replace '<DOCS_VERSION_PIN>', $Config.docs_version_pin
+        # Do it twice??
+        if ($SchemaContent -match '\.yaml"?,?\s*$') {
+            Write-Verbose "Munging yaml ID or reference in $($_.FullName)..."
+            $SchemaContent = $SchemaContent -replace '(?m)\.yaml"?,?\s*$',    '.json'
+            # Write-Warning "Replaced YAML in schema content:`n---`n$SchemaContent`n---"
+        }
         $SchemaContent = $SchemaContent -replace '(?m)\.yaml$"?,?',    '.json'
         $SchemaPath    = $_.FullName    -replace 'src',                $Config.version
         $SchemaFolder  = Split-Path -Parent $SchemaPath
         if (-not (Test-Path -Path ($SchemaFolder))) {
             $null = New-Item -Path $SchemaFolder -ItemType Directory -Force
         }
+        $schemaOutputPath = $SchemaPath -replace '\.yaml$', '.json'
+        # Write-Warning (@(
+        #     '---'
+        #     "# $schemaOutputPath"
+        #     $SchemaContent
+        #     '---'
+        # ) -join "`n")
 
         $SchemaContent | yayaml\ConvertFrom-Yaml
         | ConvertTo-Json -Depth 99
         | ForEach-Object { $_ -replace '\r\n', "`n" }
         | Out-File -FilePath ($SchemaPath -replace '\.yaml$', '.json') -Force
     }
+    exit
 
     Write-Verbose "Building schema registry..."
     $RegistryParameters = @{
