@@ -1,58 +1,76 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+using module ../../build.helpers.psm1
+
 BeforeDiscovery {
-    $tomls = Get-ChildItem $PSScriptRoot/../../en-us.toml -Recurse -File
+    # Limit the folders to recursively search for rust i18n translation strings
+    $rootFolders = @(
+        'adapters'
+        'dsc'
+        'extensions'
+        'grammars'
+        'lib'
+        'pal'
+        'resources'
+        'tools'
+        'y2j'
+    )
+    $localeFolders = $rootFolders | ForEach-Object -Process {
+        Get-ChildItem $PSScriptRoot/../../$_/locales -Recurse -Directory
+    }
+    
     $projects = @()
-    $tomls | ForEach-Object {
-        $projectName = (Split-Path $_ -Parent | Split-Path -Parent)
-        $projects += @{ project = $projectName; toml = $_ }
+    $localeFolders | ForEach-Object -Process {
+        $projects   += @{
+            project         = Split-Path $_ -Parent
+            translationInfo = [DscProjectRustTranslationInfo]::new($_)
+        }
     }
 }
 
 Describe 'Internationalization tests' {
-    It 'Project <project> uses i18n strings from <toml>' -TestCases $projects {
-        param($project, $toml)
+    Context '<project>' -ForEach $projects {
+        It 'Uses translation strings' {
+            $check = @{
+                Not           = $true
+                BeNullOrEmpty = $true
+                Because       = "'$project' defines at least one translation file"
+            }
+            $translationInfo.UsedTranslations | Should @check
+        }
+        It 'Does not define any duplicate translation strings' {
+            $check = @{
+                BeNullOrEmpty = $true
+                Because = (@(
+                    "The following translation keys are defined more than once:"
+                    $translationInfo.DuplicateTranslations | ConvertTo-Json -Depth 2
+                ) -join ' ')
+            }
 
-        $i18n = [System.Collections.Hashtable]::new([System.StringComparer]::Ordinal)
-        $prefix = ''
-        Get-Content -Path $toml | ForEach-Object {
-            if ($_ -match '\[(?<prefix>.*?)\]') {
-                $prefix = $Matches['prefix']
-            }
-            elseif ($_ -match '^(?<key>\w+)\s?=\s?"(?<value>.*?)"') {
-                $key = $prefix + '.' + $Matches['key']
-                $i18n[$key] = 0
-            }
+            $translationInfo.DuplicateTranslations | Should @check
         }
 
-        $patterns = @{
-            t = '(?s)\bt\!\(\s*"(?<key>.*?)".*?\)'
-            panic_t = '(?s)\bpanic_t\!\(\s*"(?<key>.*?)".*?\)'
-            assert_t = '(?s)\bassert_t\!\(\s*.*?,\s*"(?<key>.*?)".*?\)'
-        }
-
-        $missing = @()
-        Get-ChildItem -Recurse -Path $project -Include *.rs -File | ForEach-Object {
-            $content = Get-Content -Path $_ -Raw
-            foreach ($pattern in $patterns.keys) {
-                ($content | Select-String -Pattern $patterns[$pattern] -AllMatches).Matches | ForEach-Object {
-                    # write-verbose -verbose "Line: $_"
-                    if ($null -ne $_) {
-                        $key = $_.Groups['key'].Value
-                        if ($i18n.ContainsKey($key)) {
-                            $i18n[$key] = 1
-                        }
-                        else {
-                            $missing += $key
-                        }
-                    }
-                }
+        It 'Uses every defined translation string' {
+            $check = @{
+                BeNullOrEmpty = $true
+                Because = (@(
+                    "The following translation keys are defined but not used:"
+                    $translationInfo.UnusedTranslations | ConvertTo-Json -Depth 2
+                ) -join ' ')
             }
+            $translationInfo.UnusedTranslations | Should @check
         }
 
-        $missing | Should -BeNullOrEmpty -Because "The following i18n keys are missing from $toml :`n$($missing | Out-String)"
-        $unused = $i18n.GetEnumerator() | Where-Object { $_.Value -eq 0 } | ForEach-Object { $_.Key }
-        $unused | Should -BeNullOrEmpty -Because "The following i18n keys are unused in the project:`n$($unused | Out-String)"
+        It 'Defines every used translation string' {
+            $check = @{
+                BeNullOrEmpty = $true
+                Because = (@(
+                    "The following translation keys are used but not defined:"
+                    $translationInfo.MissingTranslations | ConvertTo-Json -Depth 2
+                ) -join ' ')
+            }
+            $translationInfo.MissingTranslations | Should @check
+        }
     }
 }
