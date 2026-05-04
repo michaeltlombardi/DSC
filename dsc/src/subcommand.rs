@@ -802,12 +802,13 @@ pub fn list_resources(
             let capability_types = [
                 (Capability::Get, "g"),
                 (Capability::Set, "s"),
+                (Capability::SetWhatIf, "w"),
                 (Capability::SetHandlesExist, "x"),
                 (Capability::Test, "t"),
                 (Capability::Delete, "d"),
+                (Capability::DeleteWhatIf, "W"),
                 (Capability::Export, "e"),
                 (Capability::Resolve, "r"),
-                (Capability::WhatIf, "w"),
             ];
             let mut capabilities = "-".repeat(capability_types.len());
 

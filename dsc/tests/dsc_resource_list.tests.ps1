@@ -162,16 +162,17 @@ Describe 'Tests for listing resources' {
         }
     }
 
-    It 'What-if capability is added for resources supporting it' {
-        $out = dsc resource list 'Test/*' | ConvertFrom-Json
+    It 'What-if capability is added for resources supporting it for: <resource>' -TestCases @(
+        @{ resource = 'Test/WhatIf'; capability = 'SetWhatIf' }
+        @{ resource = 'Test/WhatIfArgKind'; capability = 'SetWhatIf' }
+        @{ resource = 'Test/WhatIfDelete'; capability = 'DeleteWhatIf' }
+        @{ resource = 'Test/WhatIfReturnDiff'; capability = 'SetWhatIf' }
+    ) {
+        param($resource, $capability)
+
+        $out = dsc resource list $resource | ConvertFrom-Json
         $LASTEXITCODE | Should -Be 0
-        $out.Count | Should -BeGreaterThan 0
-        foreach ($resource in $out) {
-            if ($resource.type -like 'Test/WhatIf*') {
-                $resource.capabilities | Should -Contain 'whatIf'
-            } else {
-                $resource.capabilities | Should -Not -Contain 'whatIf'
-            }
-        }
+        $out.Count | Should -Be 1
+        $out.capabilities | Should -Contain $capability
     }
 }

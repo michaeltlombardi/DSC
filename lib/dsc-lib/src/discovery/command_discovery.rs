@@ -800,7 +800,7 @@ fn load_resource_manifest(path: &Path, manifest: &ResourceManifest) -> Result<Ds
             capabilities.insert(Capability::SetHandlesExist);
         }
         if let Some(args) = &set.args && args_contains_what_if(args) {
-            capabilities.insert(Capability::WhatIf);
+            capabilities.insert(Capability::SetWhatIf);
         }
     }
     if let Some(test) = &manifest.test {
@@ -811,7 +811,7 @@ fn load_resource_manifest(path: &Path, manifest: &ResourceManifest) -> Result<Ds
         verify_executable(&manifest.resource_type, "delete", &delete.executable, path.parent().unwrap());
         capabilities.insert(Capability::Delete);
         if let Some(args) = &delete.args && args_contains_what_if(args) {
-            capabilities.insert(Capability::WhatIf);
+            capabilities.insert(Capability::DeleteWhatIf);
         }
     }
     if let Some(export) = &manifest.export {
@@ -827,7 +827,7 @@ fn load_resource_manifest(path: &Path, manifest: &ResourceManifest) -> Result<Ds
     }
     if let Some(what_if) = &manifest.what_if {
         verify_executable(&manifest.resource_type, "what-if", &what_if.executable, path.parent().unwrap());
-        capabilities.insert(Capability::WhatIf);
+        capabilities.insert(Capability::SetWhatIf);
     }
 
     let mut resource = DscResource::new();
